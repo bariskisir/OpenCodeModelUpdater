@@ -1,0 +1,156 @@
+import * as fs from "fs";
+import * as path from "path";
+import * as os from "os";
+import { OpenCodeConfig } from "./types";
+
+const CONFIG_FILE = "opencode.json";
+const CONFIG_FILE_JSONC = "opencode.jsonc";
+
+function getConfigDir(): string {
+  if (process.env.OPENCODE_CONFIG_DIR) {
+    return process.env.OPENCODE_CONFIG_DIR;
+  }
+
+  if (process.env.OPENCODE_CONFIG) {
+    return path.dirname(process.env.OPENCODE_CONFIG);
+  }
+
+  const xdgConfig = process.env.XDG_CONFIG_HOME;
+  if (xdgConfig) {
+    return path.join(xdgConfig, "opencode");
+  }
+
+  return path.join(os.homedir(), ".config", "opencode");
+}
+
+function getConfigPath(): string {
+  if (process.env.OPENCODE_CONFIG) {
+    return process.env.OPENCODE_CONFIG;
+  }
+
+  const configDir = getConfigDir();
+  const jsonPath = path.join(configDir, CONFIG_FILE);
+  const jsoncPath = path.join(configDir, CONFIG_FILE_JSONC);
+
+  if (fs.existsSync(jsonPath)) return jsonPath;
+  if (fs.existsSync(jsoncPath)) return jsoncPath;
+  return jsonPath;
+}
+
+function stripJsonComments(text: string): string {
+  let result = "";
+  let i = 0;
+  let inString = false;
+  let escape = false;
+
+  while (i < text.length) {
+    const ch = text[i];
+
+    if (inString) {
+      result += ch;
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      i++;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      result += ch;
+      i++;
+      continue;
+    }
+
+    if (ch === "/" && i + 1 < text.length) {
+      if (text[i + 1] === "/") {
+        while (i < text.length && text[i] !== "\n") i++;
+        continue;
+      }
+      if (text[i + 1] === "*") {
+        i += 2;
+        while (i + 1 < text.length && !(text[i] === "*" && text[i + 1] === "/")) i++;
+        i += 2;
+        continue;
+      }
+    }
+
+    result += ch;
+    i++;
+  }
+
+  return result;
+}
+
+function removeTrailingCommas(text: string): string {
+  return text.replace(/,\s*([\]}])/g, "$1");
+}
+
+export function readConfig(): OpenCodeConfig | null {
+  const configPath = getConfigPath();
+  if (!fs.existsSync(configPath)) return null;
+
+  const raw = fs.readFileSync(configPath, "utf-8");
+  const cleaned = removeTrailingCommas(stripJsonComments(raw));
+
+  try {
+    return JSON.parse(cleaned) as OpenCodeConfig;
+  } catch {
+    throw new Error(`Failed to parse config at ${configPath}`);
+  }
+}
+
+export function backupConfig(): string | null {
+  const configPath = getConfigPath();
+  if (!fs.existsSync(configPath)) return null;
+
+  const now = new Date();
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const timestamp =
+    now.getFullYear().toString() +
+    pad(now.getMonth() + 1) +
+    pad(now.getDate()) +
+    pad(now.getHours()) +
+    pad(now.getMinutes()) +
+    pad(now.getSeconds());
+
+  const backupName = path.basename(configPath) + `_${timestamp}.bak`;
+  const backupPath = path.join(path.dirname(configPath), backupName);
+
+  fs.copyFileSync(configPath, backupPath);
+  return backupPath;
+}
+
+export function writeConfig(config: OpenCodeConfig): string {
+  const configDir = getConfigDir();
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+
+  const configPath = path.join(configDir, CONFIG_FILE);
+  const json = JSON.stringify(config, null, 2);
+  fs.writeFileSync(configPath, json, "utf-8");
+  return configPath;
+}
+
+export function mergeConfig(
+  existing: OpenCodeConfig | null,
+  providerKey: string,
+  providerData: OpenCodeConfig["provider"][string]
+): OpenCodeConfig {
+  const config: OpenCodeConfig = existing
+    ? { ...existing }
+    : { $schema: "https://opencode.ai/config.json", provider: {} };
+
+  if (!config.provider) {
+    config.provider = {};
+  }
+
+  config.provider[providerKey] = providerData;
+
+  return config;
+}

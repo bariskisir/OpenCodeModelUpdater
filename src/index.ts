@@ -1,0 +1,168 @@
+#!/usr/bin/env node
+
+import { Command } from "commander";
+import { readConfig, backupConfig, writeConfig, mergeConfig } from "./config";
+import { getProvider, getAllProviders, getProviderNames } from "./providers";
+import { ProviderHandler, ProviderFetchResult, OpenCodeConfig } from "./types";
+
+function listProviders() {
+  const names = getProviderNames();
+  console.log("Available providers:");
+  for (const name of names) {
+    const handler = getProvider(name);
+    if (handler) {
+      console.log(`  ${name} - ${handler.name}`);
+    }
+  }
+}
+
+function createProgressBar(total: number) {
+  let current = 0;
+
+  return {
+    start: () => {
+      current = 0;
+      renderProgress();
+    },
+    update: (count: number) => {
+      current = Math.min(count, total);
+      renderProgress();
+    },
+    finish: () => {
+      current = total;
+      renderProgress();
+      console.log(""); // New line after progress bar
+    },
+  };
+
+  function renderProgress() {
+    const percentage = Math.round((current / total) * 100);
+    const filled = Math.floor((current / total) * 30);
+    const empty = 30 - filled;
+    const bar = "█".repeat(filled) + "░".repeat(empty);
+    process.stdout.write(
+      `\rFetching models: [${bar}] ${percentage}% (${current}/${total})`
+    );
+  }
+}
+
+async function fetchProvidersParallel(
+  handlers: ProviderHandler[],
+  existingConfig: OpenCodeConfig | null
+): Promise<Array<{ handler: ProviderHandler; result: ProviderFetchResult } | { handler: ProviderHandler; error: Error }>> {
+  const progress = createProgressBar(handlers.length);
+  progress.start();
+
+  const promises = handlers.map(async (handler) => {
+    try {
+      const result = await handler.fetch();
+      return { handler, result };
+    } catch (error) {
+      return {
+        handler,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
+  });
+
+  const results: Array<
+    { handler: ProviderHandler; result: ProviderFetchResult } | { handler: ProviderHandler; error: Error }
+  > = [];
+
+  for (let i = 0; i < promises.length; i++) {
+    const result = await promises[i];
+    results.push(result);
+    progress.update(i + 1);
+  }
+
+  progress.finish();
+  return results;
+}
+
+const program = new Command();
+
+program
+  .name("opencode-model-updater")
+  .description("Update OpenCode configuration with the latest models from providers")
+  .version("1.0.0")
+  .option("-l, --list", "List available providers")
+  .option(
+    "-p, --provider <names>",
+    `Provider(s) to update (comma-separated: ${getProviderNames().join(", ")})`,
+    "all"
+  )
+  .action(async (options: { list?: boolean; provider: string }) => {
+    if (options.list) {
+      listProviders();
+      return;
+    }
+
+    try {
+      const providerInput = options.provider.toLowerCase();
+      const providerNames = providerInput.split(",").map((p) => p.trim());
+
+      const handlers =
+        providerInput === "all"
+          ? getAllProviders()
+          : providerNames.map((providerName) => {
+            const h = getProvider(providerName);
+            if (!h) {
+              console.error(`Unknown provider: ${providerName}`);
+              console.error(
+                `Available providers: ${getProviderNames().join(", ")}, all`
+              );
+              process.exit(1);
+            }
+            return h;
+          });
+
+      let config = readConfig();
+      const backupPath = backupConfig();
+
+      if (backupPath) {
+        console.log(`Backup created: ${backupPath}`);
+      } else {
+        console.log("No existing config found, creating new one.");
+      }
+
+      const results = await fetchProvidersParallel(handlers, config);
+
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const item of results) {
+        if ("error" in item) {
+          failureCount++;
+          console.error(`\n✗ ${item.handler.name}: ${item.error.message}`);
+        } else {
+          successCount++;
+          const { handler, result } = item;
+          const apiKey = config
+            ? handler.extractApiKey(config)
+            : handler.extractApiKey({ provider: {} } as any);
+
+          result.provider.options.apiKey = apiKey;
+          config = mergeConfig(config, result.providerKey, result.provider);
+
+          const modelCount = Object.keys(result.provider.models).length;
+          console.log(`✓ ${handler.name} - Loaded ${modelCount} models`);
+        }
+      }
+
+      if (successCount === 0) {
+        console.error("\nNo providers were successfully fetched!");
+        process.exit(1);
+      }
+
+      const writtenPath = writeConfig(config!);
+      console.log(`\nConfig written to: ${writtenPath}`);
+
+      console.log(`\nResults: ${successCount} succeeded, ${failureCount} failed`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Error: ${message}`);
+      process.exit(1);
+    }
+  });
+
+program.parse();

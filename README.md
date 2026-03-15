@@ -1,0 +1,110 @@
+# OpenCode Model Updater
+
+CLI tool that automatically fetches and updates [OpenCode](https://opencode.ai) configuration with the latest models from supported providers.
+
+New models added to provider APIs can take time to appear in [models.dev](https://models.dev/). This tool automatically syncs all available models from your chosen providers and updates `opencode.json` instantly—enabling you to use any model immediately without waiting.
+
+## Features
+
+- Automatically updates all available models from 5 OpenAI-compatible providers
+- Updates or creates `~/.config/opencode/opencode.json` with latest model data
+- Supports Windows, Linux, and macOS
+- Preserves existing provider configurations during updates
+- Creates automatic timestamped backups before each update
+
+## Installation
+
+```bash
+npm install -g opencode-model-updater
+```
+
+Or run directly with npx:
+
+```bash
+npx opencode-model-updater
+```
+
+## Usage
+
+```bash
+opencode-model-updater [options]
+```
+
+### Options
+
+| Option | Default | Description |
+|---|---|---|
+| `--provider <name>` | `all` | Specific provider(s) to update (comma-separated names or `all`) |
+| `--version` | | Display version number |
+| `--help` | | Show help message |
+| `--list` | | List all available providers |
+
+### Supported Providers
+
+| Provider | Description |
+|---|---|
+| `openrouter` | [OpenRouter](https://openrouter.ai) - Access 600+ LLMs through a single API |
+| `aihubmix` | [AIHubMix](https://aihubmix.com) - Multi-provider model gateway with 637+ models |
+| `ollamacloud` | [Ollama Cloud](https://ollama.com) - Run open-source models on your own cloud |
+| `nvidia` | [Nvidia](https://api.nvidia.com) - Nvidia NIM models |
+| `abacus` | [Abacus](https://abacus.ai) - Abacus AI models |
+
+### Examples
+
+Update configuration with all providers:
+
+```bash
+opencode-model-updater
+```
+
+Update only OpenRouter provider:
+
+```bash
+opencode-model-updater --provider openrouter
+```
+
+Update only AIHubMix provider:
+
+```bash
+opencode-model-updater --provider aihubmix
+```
+
+Update multiple specific providers:
+
+```bash
+opencode-model-updater --provider openrouter,aihubmix
+```
+
+List all available providers:
+
+```bash
+opencode-model-updater --list
+```
+
+## Generated Config Example
+
+The tool creates provider entries in your OpenCode configuration with all available models:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "your-existing-provider": { "..." : "preserved" },
+    "openrouter-auto-generated": {
+      "name": "OpenRouter Auto Generated",
+      "options": {
+        "baseURL": "https://openrouter.ai/api/v1",
+        "apiKey": "your-api-key"
+      },
+      "models": {
+        "openai/gpt-4o": { "name": "GPT-4o" },
+        "anthropic/claude-sonnet-4": { "name": "Claude Sonnet 4" }
+      }
+    }
+  }
+}
+```
+
+## License
+
+[MIT](LICENSE)
