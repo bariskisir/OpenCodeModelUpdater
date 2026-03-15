@@ -84,7 +84,7 @@ const program = new Command();
 program
   .name("opencode-model-updater")
   .description("Update OpenCode configuration with the latest models from providers")
-  .version("1.0.0")
+  .version("1.1.0")
   .option("-l, --list", "List available providers")
   .option(
     "-p, --provider <names>",

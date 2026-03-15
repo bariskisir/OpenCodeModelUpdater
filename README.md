@@ -1,12 +1,14 @@
 # OpenCode Model Updater
 
+[![npm version](https://img.shields.io/npm/v/opencode-model-updater.svg)](https://www.npmjs.com/package/opencode-model-updater)
+
 CLI tool that automatically fetches and updates [OpenCode](https://opencode.ai) configuration with the latest models from supported providers.
 
 New models added to provider APIs can take time to appear in [models.dev](https://models.dev/). This tool automatically syncs all available models from your chosen providers and updates `opencode.json` instantly—enabling you to use any model immediately without waiting.
 
 ## Features
 
-- Automatically updates all available models from 5 OpenAI-compatible providers
+- Automatically updates all available models from 24 OpenAI-compatible providers
 - Updates or creates `~/.config/opencode/opencode.json` with latest model data
 - Supports Windows, Linux, and macOS
 - Preserves existing provider configurations during updates
@@ -44,10 +46,29 @@ opencode-model-updater [options]
 | Provider | Description |
 |---|---|
 | `openrouter` | [OpenRouter](https://openrouter.ai) - Access 600+ LLMs through a single API |
-| `aihubmix` | [AIHubMix](https://aihubmix.com) - Multi-provider model gateway with 637+ models |
+| `aihubmix` | [AIHubMix](https://aihubmix.com) - Multi-provider model gateway with 600+ models |
 | `ollamacloud` | [Ollama Cloud](https://ollama.com) - Run open-source models on your own cloud |
 | `nvidia` | [Nvidia](https://api.nvidia.com) - Nvidia NIM models |
 | `abacus` | [Abacus](https://abacus.ai) - Abacus AI models |
+| `novita-ai` | [Novita AI](https://novita.ai) - Fast and affordable AI inference |
+| `chutes` | [Chutes AI](https://chutes.ai) - AI model infrastructure |
+| `cortecs` | [Cortecs AI](https://cortecs.ai) - AI inference platform |
+| `moark` | [Moark](https://moark.ai) - AI model marketplace |
+| `helicone` | [Helicone](https://helicone.ai) - AI observability and model gateway |
+| `huggingface` | [Hugging Face](https://huggingface.co) - Open AI model hub |
+| `fastrouter` | [FastRouter](https://fastrouter.ai) - Fast AI routing |
+| `inception` | [Inception Labs](https://inceptionlabs.ai) - AI inference |
+| `zenmux` | [Zenmux](https://zenmux.ai) - AI model multiplexing |
+| `ovhcloud` | [OVH Cloud](https://ovhcloud.ai) - Cloud AI inference |
+| `synthetic` | [Synthetic AI](https://synthetic.ai) - AI model services |
+| `nano-gpt` | [NanoGPT](https://nano-gpt.com) - Lightweight GPT models |
+| `requesty` | [Requesty](https://requesty.ai) - AI request routing |
+| `friendli` | [Friendli](https://friendli.ai) - AI inference engine |
+| `io-net` | [IO.NET](https://io.net) - Distributed GPU computing |
+| `modelscope` | [ModelScope](https://modelscope.cn) - AI model hub (China) |
+| `poe` | [Poe](https://poe.com) - AI chatbot platform |
+| `opencode-zen` | [OpenCode Zen](https://opencode.ai/zen) - OpenCode Zen AI |
+| `deep-infra` | [Deep Infra](https://deepinfra.com) - AI model hosting |
 
 ### Examples
 

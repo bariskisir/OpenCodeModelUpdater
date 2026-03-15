@@ -1,6 +1,6 @@
 {
   "name": "opencode-model-updater",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CLI tool to auto-generate OpenCode configuration by fetching models from providers",
   "main": "dist/index.js",
   "bin": {
