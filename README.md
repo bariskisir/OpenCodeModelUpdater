@@ -13,23 +13,12 @@ New models added to provider APIs can take time to appear in [models.dev](https:
 - Supports Windows, Linux, and macOS
 - Preserves existing provider configurations during updates
 - Creates automatic timestamped backups before each update
-
-## Installation
-
-```bash
-npm install -g opencode-model-updater
-```
-
-Or run directly with npx:
-
-```bash
-npx opencode-model-updater
-```
+- Removes auto-generated provider entries from config with `--remove`
 
 ## Usage
 
 ```bash
-opencode-model-updater [options]
+npx opencode-model-updater [options]
 ```
 
 ### Options
@@ -37,6 +26,7 @@ opencode-model-updater [options]
 | Option | Default | Description |
 |---|---|---|
 | `--provider <name>` | `all` | Specific provider(s) to update (comma-separated names or `all`) |
+| `--remove [names]` | | Remove auto-generated provider entries (comma-separated names, or omit to remove all) |
 | `--version` | | Display version number |
 | `--help` | | Show help message |
 | `--list` | | List all available providers |
@@ -75,31 +65,43 @@ opencode-model-updater [options]
 Update configuration with all providers:
 
 ```bash
-opencode-model-updater
+npx opencode-model-updater
 ```
 
 Update only OpenRouter provider:
 
 ```bash
-opencode-model-updater --provider openrouter
+npx opencode-model-updater --provider openrouter
 ```
 
 Update only AIHubMix provider:
 
 ```bash
-opencode-model-updater --provider aihubmix
+npx opencode-model-updater --provider aihubmix
 ```
 
 Update multiple specific providers:
 
 ```bash
-opencode-model-updater --provider openrouter,aihubmix
+npx opencode-model-updater --provider openrouter,aihubmix
 ```
 
 List all available providers:
 
 ```bash
-opencode-model-updater --list
+npx opencode-model-updater --list
+```
+
+Remove all auto-generated provider entries from config:
+
+```bash
+npx opencode-model-updater --remove
+```
+
+Remove specific auto-generated providers from config:
+
+```bash
+npx opencode-model-updater --remove openrouter,aihubmix
 ```
 
 ## Generated Config Example
