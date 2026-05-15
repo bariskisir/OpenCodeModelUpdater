@@ -4,7 +4,7 @@
 
 CLI tool that automatically fetches and updates [OpenCode](https://opencode.ai) configuration with the latest models from supported providers.
 
-New models added to provider APIs can take time to appear in [models.dev](https://models.dev/). This tool automatically syncs all available models from your chosen providers and updates `opencode.json` instantly—enabling you to use any model immediately without waiting.
+New models added to provider APIs can take time to appear in [models.dev](https://models.dev/model-schema.json). This tool automatically syncs all available models from your chosen providers and updates `opencode.json` instantly—enabling you to use any model immediately without waiting.
 
 ## Features
 
